@@ -64,14 +64,17 @@ func execCommand(namespace, podName string, stdinReader io.Reader, container *v1
 		logrus.Errorf("Creating remote command executor failed: %v", err)
 		return "", err
 	}
-
+	//输出流缓冲区
 	stdOut := bytes.Buffer{}
+	//错误输出流缓冲区
 	stdErr := bytes.Buffer{}
 
 	logrus.Debugf("Executing command '%v' in namespace='%s', pod='%s', container='%s'", command, namespace, podName, container.Name)
+	//执行指令 Stdout 是 POD 的标准输出流，Stdin 是 POD 的标准输入流，Stderr 是标准错误输出流
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdout: bufio.NewWriter(&stdOut),
 		Stderr: bufio.NewWriter(&stdErr),
+		//这里是是需要往 POD 中传入的内容，使用 POD POD 标准输入流进行传输，在 POD 内部处理接收标准输入流就可以获取需要传输的文件
 		Stdin:  stdinReader,
 		Tty:    false,
 	})
