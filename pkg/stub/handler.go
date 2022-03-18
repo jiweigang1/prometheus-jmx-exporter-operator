@@ -260,7 +260,9 @@ func queryPods(namespace, labelSelector string) (*v1.PodList, error) {
 
 }
 
-// processPods loads prometheus jmx exporter agent into each pod
+// 
+
+s loads prometheus jmx exporter agent into each pod
 func processPods(pods []v1.Pod, config *v1alpha1.PrometheusJmxExporterConfig, portNumber int) {
 	logrus.Info("Processing running pods...")
 
@@ -295,7 +297,7 @@ func processPod(pod *v1.Pod, config *v1alpha1.PrometheusJmxExporterConfig, portN
 		// TODO: prometheus doesn't support scraping multiple containers running on the same pod
 		// TODO: in case of multiple containers which container we should go with
 		container := pod.Spec.Containers[0]
-
+    		// 查询出 Java 进程 ID 
 		pids, err := queryJavaProcesses(pod, &container)
 
 		if err != nil {
@@ -315,7 +317,8 @@ func processPod(pod *v1.Pod, config *v1alpha1.PrometheusJmxExporterConfig, portN
 			return err
 		}
 
-		// copy config to pod container
+		// copy config to pod container  
+		// Agent 和 Java 应用进程是在一个 container 中的
 		if err := copyPrometheusJmxExporterConfToPod(config, pod, &container); err != nil {
 			return err
 		}
@@ -326,12 +329,13 @@ func processPod(pod *v1.Pod, config *v1alpha1.PrometheusJmxExporterConfig, portN
 		// already in use by the processes running in the container
 
 		logrus.Infof("Exposing port number %d on '%s/%s/%s'", portNumber, pod.Namespace, pod.Name, container.Name)
-
+	        //暴露端口用于采集使用的，exporter 应该被拉取上传指标，不是自己 post 的
 		if err := exposeContainerPort(int32(portNumber), pod, &container); err != nil {
 			return err
 		}
 
 		// load prometheus jmx exporter agent
+		// 运行 JAVA Agent 
 		if err := loadPrometheusJmxExporterAgent(pod, &container, portNumber, pids[0]); err != nil {
 			return err
 		}
@@ -451,6 +455,7 @@ func copyPrometheusJmxExporterConfToPod(configContent *v1alpha1.PrometheusJmxExp
 }
 
 // copyJmxPrometheusExporterJars copies the jars of prometheus jmx exporter to pod
+// 复制 Agent jar 到 POD 中
 func copyJmxPrometheusExporterJars(pod *v1.Pod, container *v1.Container) error {
 	err := copyToPod(pod.Namespace, pod.Name, container, prometheusJmxExporterSrcJarsDir, prometheusJmxExporterTargetDir)
 	if err != nil {
