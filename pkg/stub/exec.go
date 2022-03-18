@@ -49,7 +49,7 @@ func execCommand(namespace, podName string, stdinReader io.Reader, container *v1
 
 	execReq := kubeClient.CoreV1().RESTClient().Post()
 	execReq = execReq.Resource("pods").Name(podName).Namespace(namespace).SubResource("exec")
-
+	// execReq 配置是在那里使用的？
 	execReq.VersionedParams(&v1.PodExecOptions{
 		Container: container.Name,
 		Command:   command,
