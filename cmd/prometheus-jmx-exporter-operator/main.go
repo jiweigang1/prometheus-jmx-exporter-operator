@@ -22,8 +22,8 @@ func main() {
 	printVersion()
 	namespace := os.Getenv("OPERATOR_NAMESPACE")
         //监控 crd 自定义资源变化
-	sdk.Watch("banzaicloud.com/v1alpha1", "PrometheusJmxExporter", namespace, 0)
-	
+	sdk.Watch("banzaicloud.com/v1alpha1", "PrometheusJmxExporter", namespace, 0) 
+	//监控 pod 资源变化   自定义资源变化主要是监控选择lable变化，pod 主要是如果有新的pod创建，应该检查是否嵌入agent
 	sdk.Watch("v1", "Pod", namespace, 0)
 	sdk.Handle(stub.NewHandler())
 	sdk.Run(context.TODO())
