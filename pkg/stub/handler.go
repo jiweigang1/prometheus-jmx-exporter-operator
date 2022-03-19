@@ -100,8 +100,8 @@ func (h *Handler) Handle(ctx types.Context, event types.Event) error {
 		}
 
 	case *v1.Pod:
-		pod := o
-
+		pod := o 
+		// pod 删除是不需要进行处理的
 		if !event.Deleted && pod.Status.Phase != v1.PodRunning {
 			// process only running pods
 			return nil
