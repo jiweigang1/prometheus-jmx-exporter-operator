@@ -101,18 +101,20 @@ func (h *Handler) Handle(ctx types.Context, event types.Event) error {
 
 	case *v1.Pod:
 		pod := o 
-		// pod 删除是不需要进行处理的
+		// 如果 POD 不是运行状态，并且不是删除POD 事件
 		if !event.Deleted && pod.Status.Phase != v1.PodRunning {
 			// process only running pods
 			return nil
 		}
 
+		//查询一个namespace下的所有自动资源
 		prometheusJmxExporters, err := queryPrometheusJmxExporters(pod.Namespace)
 		if err != nil {
 			logrus.Errorf("Error during querying prometheusjmxexporters in namespace '%s': %v", pod.Namespace, err)
 			return err
 		}
-
+	   
+		//查找当前 pod 的自定义资源 
 		prometheusJmxExporter, err := findExporterForPod(prometheusJmxExporters, pod)
 		if err != nil {
 			return err
@@ -126,6 +128,7 @@ func (h *Handler) Handle(ctx types.Context, event types.Event) error {
 			// pod is being deleted thus remove the prometheus endpoint that
 			// is exposed by this pod if there is any
 			removePrometheusJmxExporterEndpoint(prometheusJmxExporter, pod)
+			//更新自定义资源
 			action.Update(prometheusJmxExporter)
 			return nil
 		}
